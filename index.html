@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="de"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f3ece0">
+<title>Eine Überraschung für dich</title>
+<style>
+  :root { color-scheme: light; --ink: #2d302b; --paper: #fffaf0; --accent: #8a3d45; --line: #e0d2be; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--ink);
+    background: radial-gradient(ellipse at 50% 0%, #fffaf2 0%, #f3ece0 70%);
+    font: 1.05rem/1.6 system-ui, sans-serif;
+  }
+  main { max-width: 42rem; margin: 0 auto; padding: clamp(1rem, 5vw, 3rem); }
+  h1, h2 { font-family: Georgia, serif; font-weight: normal; }
+  h1 { margin: .3rem 0 1rem; font-size: clamp(2.35rem, 8.2vw, 4.2rem); line-height: 1.01; letter-spacing: -.04em; overflow-wrap: anywhere; }
+  p { margin: .5rem 0; }
+  .karte {
+    position: relative; overflow: hidden; background: var(--paper); border: 1px solid var(--line);
+    border-radius: 1.1rem; padding: clamp(1.5rem, 6vw, 3rem); box-shadow: 0 12px 40px #45281112;
+  }
+  .karte::before { content: ""; position: absolute; inset: 7px; border: 1px solid var(--line); border-radius: .75rem; pointer-events: none; }
+  .motiv {
+    display: grid; place-items: center; width: 100%; min-height: 9rem;
+    margin-bottom: 1.6rem; border-radius: .65rem;
+    background: radial-gradient(ellipse at 50% 100%, #aa555a, #662d3b);
+    color: #ffe9be; font: 3rem/1 Georgia, serif;
+  }
+  [data-card="2"] { --accent: #39574b; }
+  [data-card="2"] .motiv { background: radial-gradient(ellipse at 50% 100%, #5d8274, #24463c); }
+  [data-card="1"] .motiv { background: radial-gradient(ellipse at 50% 100%, #a85f4e, #683837); }
+  .datum { color: var(--accent); font-size: .81rem; font-weight: 650; letter-spacing: .09em; text-transform: uppercase; }
+  .text { white-space: pre-line; overflow-wrap: anywhere; }
+  .gruss { margin-top: 1.6rem; color: var(--accent); font: italic 1.26rem/1.5 Georgia, serif; }
+  .passwort-form { margin-top: 1.5rem; }
+  .passwort-form > label:first-child { font-weight: 650; }
+  .passwort-form input[type=password], .passwort-form input[type=text] {
+    display: block; width: 100%; margin: .3rem 0 .6rem; padding: .65rem; font: inherit;
+    border: 1px solid #a99e8e; border-radius: .4rem; background: white;
+  }
+  .passwort-zeigen { display: inline-flex; gap: .45rem; align-items: center; min-height: 2.75rem; font-size: .9rem; }
+  .passwort-form button {
+    display: block; min-height: 2.75rem; margin-top: .5rem; padding: .5rem 1rem; font: inherit;
+    border: 0; border-radius: .4rem; background: #71313a; color: white; cursor: pointer;
+  }
+  .status { font-size: .9rem; }
+  .status:empty { display: none; }
+</style>
+
+</head>
+<body>
+
+
+  <main id="sperre">
+    <section class="karte" aria-labelledby="sperre-titel">
+      <div class="motiv" aria-hidden="true">♡</div>
+      <h1 id="sperre-titel">Eine Überraschung für dich</h1>
+      <p>Das Passwort steht auf deiner Karte.</p>
+      <form id="entsperren" class="passwort-form">
+        <label for="passwort">Passwort</label>
+        <input id="passwort" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" required="">
+        <label class="passwort-zeigen"><input id="passwort-zeigen" type="checkbox"> Passwort anzeigen</label>
+        <button type="submit">Überraschung öffnen</button>
+        <p class="status" id="sperr-status" role="status"></p>
+      </form>
+      <noscript>Zum Öffnen der Überraschung muss JavaScript im Browser aktiviert sein.</noscript>
+    </section>
+  </main>
+
+
+<script>
+  async function passwortSchluessel(passwort, salt, verwendung) {
+    const material = await crypto.subtle.importKey(
+      'raw', new TextEncoder().encode(passwort), 'PBKDF2', false, ['deriveKey']
+    );
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 600_000 },
+      material, { name: 'AES-GCM', length: 256 }, false, [verwendung]
+    );
+  }
+
+  function zeigeKarte(geschenk) {
+    const fragment = location.hash.slice(1);
+    const karten = Array.from(geschenk.querySelectorAll('[data-card]'));
+    const karte = karten.find(element => element.dataset.card === fragment || element.id === fragment);
+    for (const element of karten) {
+      element.hidden = element.dataset.card !== (karte?.dataset.card ?? '0');
+    }
+  }
+</script>
+<script id="verschluesselter-inhalt" type="application/json">{"salt":"baAbTYxDdDdmR6NdS0SqHA==","iv":"YBW/lCQkfDua8zZY","daten":"m6DV6IR5JaLA4GFh4GcM0fWJkOkbe9iJQxnzKoAmbcQKEUb+2UzC19EuR2bBFnvxUTp8NiVqob4IfNPoHXpm3JbXImmY7ZOSa5zVLGrbQ81WLjuj+CoH/BEZld7GOvtAzHf0fuqRHYCEtJAyEllQ6e0v8kLEqFZzXUo48ezl8IUlWG5aBjhrXYKcGYJTfMIhXba48vmV7A3vbpEB9qrotfvBIbrACwX5BpyQDqd0tSXGu+hN3Kh5DT9VCVhEnAWkuYLTm8t1JOHbR89mT7Ec48gRJ4zt7yXldmQ4k+vUQt2/eqp04HMXOPUcNJKoegni4nekPx7pX5UE3QFamVhvVCG0bAM1CM2rZTWG0k2PeXF3F1SYJ5OG6I3C2Pl0IVAomdp5xrCYQx3ncrtxBI7M39QcIgfaxRZ1yoBiodFGvZjS0gOYQflJTAyaPUybhLlxjjqv7WgmXCNeCEOOUzwHi/RaWn8StQcE1MkNUONBqiAolB7Q9iaW8WaGWMPrumfkX/nFz/DeoHYWnm59DRZXuOBvFkHBBtNDqhXg9sHDW4EXxUKDa0QaTynCmCEFv/3+POBXuH0BKfT6hm/DIbP8eWNWZH9up4/kNo46/NQAakdo8P7lrC9nQFmwNgk1QSVx945MnUqz4ZswbIaA+GU5PseJzl6yJq6hL8or0y6A8CjDkHsy2ndExp4pVOzreTk6o8MpY/PWYFGa+UjTKM6W38WaABHOOezOeVEsAjOLYJLVdVHaymZBSP6WTvZZ+ZJU+BrBvPjZSHiZAeTQ30ce7sdXpNk0dCte2+YneV+CAe+mrmjWDwI4ghQEtImLR+xMgOWaARZzzqkiYRGbsw4E8/euaajdnwoXTmbprCrnCyH6iKZQq/p9knqCnCDxpCKV3SKxnkKktgwwcyXRQu4iNbLXciyB247q1WIGWYMeXXvGs0NR5mPTmMDHzxyZW3llTwwAUCdJDwxFvLjekGH2l81Hl2bQrQ0xBKe94hD+SKTXederxr2VUEFy/GBb9D4kqXQz53SYpaiCS3od5A0OS7xJSsloPgEV3KyDfEQfD/7N6Rj9Zqgu/HvB/5SZdFMazAy0c7n+Jrau3msxLcZTNG7BWG0/px8KwNiJ1kWb8k1bJ8LRGR4LUdEW+iaQFUEgeYfoUQJsEZLwolSI1f203RYzJ8PQWI9CL2PZKh5pG8f458ayP3H/4JrbZACvU3rqGHoYN6rHidIlOOz+qdL/qtr2Oom4t45UdGN6EVwCpZRKYEELDjO5pjNMdZoYsXqJHpkmCwtZSlKSqqlQ+mLo5Xuzc0A2ssEFYlAKo2QrWn3neae2sXw7YnfCpOtaOKrTfAEL8VNJ06lR39yP37dcOJLDAtZ+bGyXe5r/GXnmqxnZy01b6wmYsr0PqPuIU1SxDp3uu1eR0MdIt9ZmZoRmuk8ONZMoZVRDNUAquMX6O3qhKDkNmoubjN8iCbNLUMC9RWNlF/2U+Gm/wlJ5lwpLHHmKOA78gAfeD8YFA66C1KKIYzImlS+EgKq+lYsRH7vCyUGNz9MIf/gERFQZI3tV5YW+hLTMh9i51oX0jh8tBVS2i1F1/ZNMLugEGBp7fTPiov03qtDDPoh5eMt+KOXphYoiitoVhLCMmYLgsktKhylHTfPpppt+Ny50GUv8QOmI/LQxmwFfIsUjrqj1vBCybwHiw0phHJqT2Jli9Hco7KcT5IkqcDTFA2fUwLyhqoazhFCbhgY9MivniV+TzsaEUFymcLYjt13CMvc3+DnqP2U5QwrvZIW3iYwjuknwhu2hRrqu/GAUQJbWekQxZV6lEYbrz6sgivHyUjGqJB0D6a+KHHHr54mbW8pjwNdGYH/WFornUwASkBo5Wcfhd2QHfM6NenK5OFm0NFXW/VAlNZ4ZcsUbm9Ep8GYUNYVUP+n+9dyCFpBKRSmQBBy+"}</script>
+<script id="sperr-code">
+  const sperre = document.getElementById('sperre');
+  const formular = document.getElementById('entsperren');
+  const passwortEingabe = document.getElementById('passwort');
+  const meldung = document.getElementById('sperr-status');
+  const entsperren = formular.querySelector('button');
+
+  document.getElementById('passwort-zeigen').addEventListener('change', event => {
+    passwortEingabe.type = event.target.checked ? 'text' : 'password';
+  });
+
+  function vonBase64(wert) {
+    return Uint8Array.from(atob(wert), zeichen => zeichen.charCodeAt(0));
+  }
+
+  formular.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (entsperren.disabled) return;
+    if (!globalThis.crypto?.subtle) {
+      meldung.textContent = 'Öffne den HTTPS-Link in Safari, Chrome, Edge oder Firefox.';
+      return;
+    }
+    entsperren.disabled = true;
+    meldung.textContent = 'Die Überraschung wird geöffnet …';
+
+    try {
+      const paket = JSON.parse(document.getElementById('verschluesselter-inhalt').textContent);
+      const key = await passwortSchluessel(passwortEingabe.value, vonBase64(paket.salt), 'decrypt');
+      const klartext = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: vonBase64(paket.iv) }, key, vonBase64(paket.daten)
+      );
+      const vorlage = document.createElement('template');
+      vorlage.innerHTML = new TextDecoder().decode(klartext);
+      const geschenk = vorlage.content.firstElementChild;
+      zeigeKarte(geschenk);
+      passwortEingabe.value = '';
+      sperre.replaceWith(geschenk);
+      addEventListener('hashchange', () => zeigeKarte(geschenk));
+      const ueberschrift = geschenk.querySelector('article:not([hidden]) h1');
+      ueberschrift.tabIndex = -1;
+      ueberschrift.focus();
+    } catch (fehler) {
+      meldung.textContent = fehler.name === 'OperationError'
+        ? 'Das Passwort stimmt nicht. Versuch es noch einmal.'
+        : 'Die Überraschung konnte nicht geöffnet werden. Lade die Seite neu und versuch es noch einmal.';
+      passwortEingabe.focus();
+      passwortEingabe.select();
+    } finally {
+      entsperren.disabled = false;
+    }
+  });
+</script>
+
+
+
+</body></html>
